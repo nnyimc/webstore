@@ -2,11 +2,13 @@ package fr.nnyimc.web;
 
 import fr.nnyimc.dto.*;
 import fr.nnyimc.service.ProduitService;
-import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/api")
+import java.util.List;
+
+@Controller
 public class ProduitRestController {
     private final ProduitService produitService;
 
@@ -14,31 +16,56 @@ public class ProduitRestController {
         this.produitService = produitService;
     }
 
+    @GetMapping("/home")
+    public String index() {
+        return "home";
+    }
+
     @GetMapping("/produits")
-    public Page<ProduitResponseDTO> paginate(
+    public String paginate(
+            Model model,
             @RequestParam( name="index", defaultValue="0" ) String index,
             @RequestParam( name="range", defaultValue="10" ) String range
     ) {
-        return produitService.findAll(Integer.parseInt(index), Integer.parseInt(range));
+        List<ProduitResponseDTO> listProduits = produitService.findAll();
+        model.addAttribute("produits",listProduits);
+        return "produits";
     }
 
     @PutMapping("/produits")
-    public ProduitResponseDTO update(@RequestBody ProduitRequestDTO produitRequestDTO) {
+    public String update(
+            Model model,
+            @RequestBody ProduitRequestDTO produitRequestDTO
+    ) {
         ProduitResponseDTO fetchedDTO = produitService.findOne(produitRequestDTO.getId());
         if (fetchedDTO == null) {
-            return new ProduitResponseDTO();
+            model.addAttribute("produits", new ProduitResponseDTO());
         }
-        return fetchedDTO;
+        model.addAttribute("produits", produitRequestDTO);
+        produitService.delete(fetchedDTO.getId());
+        produitService.save(produitRequestDTO);
+        return "redirect:/produits";
     }
 
     @PostMapping("/produits")
-    public ProduitResponseDTO add(@RequestBody ProduitRequestDTO produitRequestDTO) {
-        return produitService.save(produitRequestDTO);
+    public String add(
+            Model model,
+            @RequestBody ProduitRequestDTO produitRequestDTO
+    ) {
+        produitService.save(produitRequestDTO).toString();
+        model.addAttribute("produits", produitRequestDTO);
+        return "redirect:/produits";
     }
 
     @DeleteMapping("/produits/{id}")
-    public ProduitResponseDTO delete(@PathVariable String id) {
-        return produitService.delete(id);
+    public String delete(
+            Model model,
+            @PathVariable String id
+    ) {
+        model.addAttribute("produits", produitService.findOne(id));
+        produitService.delete(id);
+        return "redirect:/produits";
+
     }
 
 }

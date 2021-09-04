@@ -64,6 +64,18 @@ public class ProduitServiceImplementation implements ProduitService {
         return new PageImpl<>(listProduitResponseDTO);
     }
 
+    @Override
+    public List<ProduitResponseDTO> findAll() {
+        List<Produit> produits = produitRepository.findAll();
+        List<ProduitResponseDTO> listProduitResponseDTO = new ArrayList<>();
+
+        for(Produit p:produits) {
+            listProduitResponseDTO.add(produitMapper.produitToProduitResponseDTO(p));
+        }
+
+        return listProduitResponseDTO;
+    }
+
     private void initializeProduct() {
         Produit fetchedProduit;
         try {
